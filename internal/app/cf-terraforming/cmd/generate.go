@@ -1105,7 +1105,26 @@ func generateResources() func(cmd *cobra.Command, args []string) {
 			structData := jsonStructData[i].(map[string]interface{})
 
 			resourceID := ""
-			if os.Getenv("USE_STATIC_RESOURCE_IDS") == "true" {
+			if os.Getenv("USE_NICE_RESOURCE_IDS") == "true" {
+				switch resourceType {
+				case "cloudflare_record":
+					// If we have a name, use that instead of the ID.
+					if structData["name"] != nil {
+						n := strings.ReplaceAll(structData["name"].(string), ".", "_")
+						recordType := structData["type"].(string)
+						resourceID = fmt.Sprintf("%s__%s", recordType, n)
+					}
+				default:
+					id := ""
+					switch structData["id"].(type) {
+					case float64:
+						id = fmt.Sprintf("%f", structData["id"].(float64))
+					default:
+						id = structData["id"].(string)
+					}
+					resourceID = fmt.Sprintf("terraform_managed_resource_%s", id)
+				}
+			} else if os.Getenv("USE_STATIC_RESOURCE_IDS") == "true" {
 				resourceID = "terraform_managed_resource"
 			} else {
 				id := ""
