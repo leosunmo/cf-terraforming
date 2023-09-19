@@ -1114,6 +1114,11 @@ func generateResources() func(cmd *cobra.Command, args []string) {
 						recordType := structData["type"].(string)
 						resourceID = fmt.Sprintf("%s__%s", recordType, n)
 					}
+				case "cloudflare_ruleset":
+					if structData["description"] != nil {
+						desc := structData["description"].(string)
+						resourceID = strings.ToLower(strings.ReplaceAll(desc, " ", "_"))
+					}
 				default:
 					id := ""
 					switch structData["id"].(type) {
@@ -1126,7 +1131,8 @@ func generateResources() func(cmd *cobra.Command, args []string) {
 				}
 			} else if os.Getenv("USE_STATIC_RESOURCE_IDS") == "true" {
 				resourceID = "terraform_managed_resource"
-			} else {
+			}
+			if resourceID == "" {
 				id := ""
 				switch structData["id"].(type) {
 				case float64:
